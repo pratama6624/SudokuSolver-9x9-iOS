@@ -11,16 +11,25 @@ import Combine
 
 class SudokuModel: ObservableObject {
     @Published var grid: [[String]] = Array(repeating: Array(repeating: "", count: 9), count: 9)
+    @Published var cellColors: [[Color]] = Array(repeating: Array(repeating: Color.white, count: 9), count: 9)
     
     func isValid(_ grid: [[String]], row: Int, col: Int, num: String) -> Bool {
+//        print("Validating \(num) at row: \(row), col: \(col)")
+        
         // Check the rows from left to right
         for i in 0..<9 {
-            if grid[row][i] == num { return false }
+            if grid[row][i] == num {
+//                print("Invalid in row")
+                return false
+            }
         }
         
         // Check the columns from top to bottom
         for i in 0..<9 {
-            if grid[i][col] == num { return false }
+            if grid[i][col] == num {
+//                print("Invalid in column")
+                return false
+            }
         }
         
         // Check sub columns 3 x 3
@@ -28,10 +37,14 @@ class SudokuModel: ObservableObject {
         let startCol = col - (col % 3)
         for i in 0..<3 {
             for j in 0..<3 {
-                if grid[startRow + i][startCol + j] == num { return false }
+                if grid[startRow + i][startCol + j] == num {
+//                    print("Invalid in 3x3 grid")
+                    return false
+                }
             }
         }
         
+//        print("Valid input!")
         return true
     }
     
@@ -51,6 +64,20 @@ class SudokuModel: ObservableObject {
         }
     }
     
+    func updateCellColor(row: Int, col: Int, isValid: Bool) {
+        DispatchQueue.main.async {
+            withAnimation {
+                if isValid {
+                    self.cellColors[row][col] = Color.red
+                } else if self.grid[row][col].isEmpty {
+                    self.cellColors[row][col] = Color.white
+                } else {
+                    self.cellColors[row][col] = Color.green
+                }
+            }
+        }
+    }
+    
     private func solveWithDelay() -> Bool {
         for row in 0..<9 {
             for col in 0..<9 {
@@ -63,7 +90,7 @@ class SudokuModel: ObservableObject {
                                 self.grid[row][col] = strNum
                             }
                             
-                            usleep(200_000)
+                            usleep(100_000)
                             
                             if self.solveWithDelay() {
                                 return true
@@ -73,7 +100,7 @@ class SudokuModel: ObservableObject {
                                 self.grid[row][col] = ""
                             }
                             
-                            usleep(200_000)
+                            usleep(100_000)
                         }
                     }
                     return false
